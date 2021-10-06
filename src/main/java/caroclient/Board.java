@@ -15,7 +15,7 @@ import utils.Value;
 
 /**
  *
- * @author Son Vu
+ * @author Son Vu1
  */
 public class Board extends JPanel {
 	private final int blockNum = Value.blockNum;
