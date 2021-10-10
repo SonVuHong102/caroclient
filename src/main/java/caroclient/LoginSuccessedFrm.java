@@ -25,7 +25,7 @@ public class LoginSuccessedFrm extends JFrame {
 	
 	public LoginSuccessedFrm() {
 		initFrm();
-		initCompoments();
+		initComponents();
 		setVisible(true);
 	}
 	
@@ -35,7 +35,7 @@ public class LoginSuccessedFrm extends JFrame {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 	}
 	
-	private void initCompoments() {
+	private void initComponents() {
 		JPanel container = new JPanel();
 		container.setSize(300,60);
 		btnCreate = new JButton("Create");
