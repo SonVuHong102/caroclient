@@ -29,6 +29,7 @@ public class Client {
 		try {
 			MulticastSocket client = new MulticastSocket(Value.clientPort);
 			client.joinGroup(new InetSocketAddress(InetAddress.getByName(Value.groupAddress),Value.clientPort),NetworkInterface.getByName(Value.hostAddress));
+			client.setSoTimeout(20000);
 			// Request : [connect] - Response : [accept connection] (Connection accepted, create new ClientSession)
 			String msg = "connect";
 			DatagramPacket packet = new DatagramPacket(msg.getBytes(),msg.length(),InetAddress.getByName(Value.serverAddress),Value.serverPort);
