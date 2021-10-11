@@ -34,7 +34,7 @@ public class LoginFrm extends JFrame {
 	private void initComponents() {
 		JPanel container = new JPanel();
 		
-		JLabel connectedMsg = new JLabel("Connected to " + Value.groupAddress + ":" + Value.serverPort);
+		JLabel connectedMsg = new JLabel("Connected to " + Value.serverAddress + ":" + Value.serverPort);
 //		connectedMsg.setForeground(Color.GREEN);
 		container.add(connectedMsg);
 	
