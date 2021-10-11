@@ -33,7 +33,6 @@ public class Client {
 			DatagramPacket packet = new DatagramPacket(msg.getBytes(),msg.length(),InetAddress.getByName(Value.serverAddress),Value.serverPort);
 			client.send(packet);
 			System.out.println("Sent connect request to server");
-			System.out.println(client.isClosed());
 			byte[] buf = new byte[1024];
 			packet = new DatagramPacket(buf,buf.length);
 			client.receive(packet);
@@ -45,6 +44,7 @@ public class Client {
 			}
 			
 		} catch (IOException ex) {
+			ex.printStackTrace();
 		} 
 	}
 }
