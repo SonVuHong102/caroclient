@@ -29,6 +29,7 @@ public class Client {
 		try {
 			MulticastSocket client = new MulticastSocket(Value.clientPort);
 			client.joinGroup(new InetSocketAddress(InetAddress.getByName(Value.groupAddress),Value.clientPort),NetworkInterface.getByName(Value.hostAddress));
+			// Request : [connect] - Response : [accept connection] (Connection accepted, create new ClientSession)
 			String msg = "connect";
 			DatagramPacket packet = new DatagramPacket(msg.getBytes(),msg.length(),InetAddress.getByName(Value.serverAddress),Value.serverPort);
 			client.send(packet);
@@ -37,9 +38,10 @@ public class Client {
 			packet = new DatagramPacket(buf,buf.length);
 			client.receive(packet);
 			msg = new String(buf);
-			if(msg.trim().equalsIgnoreCase("accept")) {
-				ClientSession newClient = new ClientSession();
-				newClient.login();
+			// Request : [connect] - Response : [accept connection] (Connection accepted, create new ClientSession)
+			if(msg.trim().equalsIgnoreCase("accept connection")) {
+				ClientSession newClient = new ClientSession(client);
+				newClient.start();
 				return;
 			}
 			

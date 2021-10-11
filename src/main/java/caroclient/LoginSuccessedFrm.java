@@ -21,7 +21,6 @@ import utils.Value;
 public class LoginSuccessedFrm extends JFrame {
 	private JButton btnJoin;
 	private JButton btnCreate;
-	private JLabel status;
 	
 	public LoginSuccessedFrm() {
 		initFrm();
@@ -39,14 +38,9 @@ public class LoginSuccessedFrm extends JFrame {
 		JPanel container = new JPanel();
 		container.setSize(300,60);
 		btnCreate = new JButton("Create");
-		btnCreate.setSize(Value.buttonWidth,Value.buttonHeight);
 		container.add(btnCreate);
 		btnJoin = new JButton("Join");
-		btnJoin.setSize(Value.buttonWidth,Value.buttonHeight);
 		container.add(btnJoin);
-		status = new JLabel("Status : Choose");
-		status.setSize(20,10);
-		container.add(status);
 		this.add(container,BorderLayout.CENTER);
 	}
 
@@ -58,9 +52,4 @@ public class LoginSuccessedFrm extends JFrame {
 		return btnCreate;
 	}
 
-	public JLabel getStatus() {
-		return status;
-	}
-	
-	
 }
