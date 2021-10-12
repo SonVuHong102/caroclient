@@ -6,6 +6,7 @@
 package caroclient;
 
 import javax.swing.JFrame;
+
 import utils.Value;
 /**
  *
@@ -16,15 +17,18 @@ public class PlayingFrm extends JFrame {
 	
 	private Board container;
 	
-	public PlayingFrm(String name, int boardStatus[][]) {
-		initMainFrm(name);
+	public PlayingFrm(String name,String oppName, int boardStatus[][],int side) {
+		initMainFrm(name,oppName,side);
 		initBoard(boardStatus);
 		
 		add(container);
 		setVisible(true);
 	}
-	private void initMainFrm(String name) {
-		setTitle(name);
+	private void initMainFrm(String name,String oppName,int side) {
+		if(side == 1)
+			setTitle("Player " + name + " : RED  \\\\//\\\\//  Opponent " + oppName + " : BLUE");
+		else
+			setTitle("Player " + name + " : BLUE  \\\\//\\\\//  Opponent " + oppName + " : RED");
 		setSize(mainFrameSize,mainFrameSize);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);

@@ -5,15 +5,13 @@
  */
 package caroclient;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.GridLayout;
+
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import utils.Value;
 
 /**
  *
@@ -23,8 +21,8 @@ public class LoginSuccessedFrm extends JFrame {
 	private JComboBox box;
 	private JButton btnRefresh;
 	private JButton btnCreate;
-	private JButton btnJoin;
-	
+	private JButton btnInvite;
+	private JLabel status;
 	
 	public LoginSuccessedFrm() {
 		initFrm();
@@ -33,9 +31,9 @@ public class LoginSuccessedFrm extends JFrame {
 	}
 	
 	private void initFrm() {
-		setSize(new Dimension(300,150));
+		setSize(new Dimension(300,180));
 		setResizable(false);
-		setTitle("Create room or select a opponent");
+		setTitle("Create or Invite");
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
 	}
@@ -54,12 +52,18 @@ public class LoginSuccessedFrm extends JFrame {
 		
 		JPanel choices = new JPanel();
 		btnCreate = new JButton("Create");
-		btnJoin = new JButton("Join");
+		btnInvite = new JButton("Invite");
 		choices.add(btnCreate);
-		choices.add(btnJoin);
+		choices.add(btnInvite);
 		container.add(choices);
 		
-		this.add(container,BorderLayout.CENTER);
+		JPanel label = new JPanel();
+		label.setPreferredSize(new Dimension(290,20));
+		status = new JLabel("Status : ");
+		label.add(status);
+		container.add(label);
+		
+		this.add(container);
 	}
 	
 	public JComboBox getBox() {
@@ -77,8 +81,12 @@ public class LoginSuccessedFrm extends JFrame {
 	}
 
 
-	public JButton getBtnJoin() {
-		return btnJoin;
+	public JButton getBtnInvite() {
+		return btnInvite;
+	}
+	
+	public JLabel getStatus() {
+		return status;
 	}
 
 }
