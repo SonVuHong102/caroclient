@@ -124,7 +124,7 @@ public class ClientSession {
 	private void invitationRejected() {
 		btnInvite.setEnabled(true);
 		btnCreate.setEnabled(true);
-		status.setText("Player " + clientUsername + " : Choice a mode");
+		status.setText("Player " + clientUsername + " : Choose a mode");
 	}
 	
 	private void playRoom() {
