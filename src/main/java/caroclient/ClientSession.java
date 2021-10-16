@@ -71,7 +71,7 @@ public class ClientSession {
 		btnInvite = loginSuccessedFrm.getBtnInvite();
 		status = loginSuccessedFrm.getStatus();
 		
-		status.setText("Player " + clientUsername + " : Choice a mode");
+		status.setText("Player " + clientUsername + " : Choose a mode");
 		
 		playerList = new ArrayList<Player>();
 		sendRefresh();
