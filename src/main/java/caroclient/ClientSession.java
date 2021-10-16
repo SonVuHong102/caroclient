@@ -139,7 +139,7 @@ public class ClientSession {
 	
 	private void sendToServer(String msg) {
 		try {
-			DatagramPacket p = new DatagramPacket(msg.getBytes(),msg.length(),InetAddress.getByName(Value.serverAddress),Value.serverPort);
+			DatagramPacket p = new DatagramPacket(msg.getBytes(),msg.length(),InetAddress.getLocalHost(),Value.serverPort);
 			client.send(p);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();

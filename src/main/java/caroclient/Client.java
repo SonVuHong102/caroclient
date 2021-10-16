@@ -32,7 +32,7 @@ public class Client {
 //			client.setSoTimeout(20000);
 			// Request : [connect] - Response : [accept connection] (Connection accepted, create new ClientSession)
 			String msg = "connect";
-			DatagramPacket packet = new DatagramPacket(msg.getBytes(),msg.length(),InetAddress.getByName(Value.serverAddress),Value.serverPort);
+			DatagramPacket packet = new DatagramPacket(msg.getBytes(),msg.length(),InetAddress.getLocalHost(),Value.serverPort);
 			client.send(packet);
 			System.out.println("Sent connect request to server");
 			byte[] buf = new byte[1024];
