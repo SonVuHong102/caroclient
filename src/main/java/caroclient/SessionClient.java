@@ -5,95 +5,170 @@
  */
 package caroclient;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import utils.Value;
+import java.net.SocketException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.swing.JFrame;
+
+import utils.Value;
 
 /**
  *
  * @author Son Vu
  */
 public class SessionClient {
-	private Socket socket;
+	private Socket server;
 	private DataInputStream fromServer;
 	private DataOutputStream toServer;
-	private Socket opp;
 	
-	private LoginSuccessedFrm loginSuccessedFrm;
-	private int side;
+	private ServerListener listener = null;
 	
-	private String name;
+	private LoginFrm loginFrm;
+	private SignupFrm signupFrm;
 
-	public SessionClient(Socket socket) {
-		this.socket = socket;
+	public SessionClient(Socket server) {
+		this.server = server;
+		// Create Data Stream
+		try {
+			fromServer = new DataInputStream(server.getInputStream());
+			toServer = new DataOutputStream(server.getOutputStream());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void start() {
-		try {
-			fromServer = new DataInputStream(socket.getInputStream());
-			toServer = new DataOutputStream(socket.getOutputStream());
-			
-			name = fromServer.readUTF();
-			loginSuccessedFrm = new LoginSuccessedFrm();
-			loginSuccessedFrm.setTitle(name);
-			
-			loginSuccessedFrm.getBtnCreate().addActionListener( e -> {
+			// Create listener
+			listener = new ServerListener();
+			listener.start();
+
+			// Initiate UI
+			createLoginFrm();
+
+	}
+
+	private void createLoginFrm() {
+		loginFrm = new LoginFrm();
+		setClosingAction(loginFrm);
+		loginFrm.getLoginButton().addActionListener(e -> {
+			String username = loginFrm.getUsernameText().getText().trim();
+			String password = new String(loginFrm.getPasswordText().getPassword()).trim();
+			sendToServer("Login " + username + " " + password);
+		});
+		loginFrm.getSignupButton().addActionListener(e -> {
+			createSignupFrm();
+		});
+	}
+
+	private void createSignupFrm() {
+		signupFrm = new SignupFrm();
+		loginFrm.setVisible(false);
+		signupFrm.getSignupButton().addActionListener(e -> {
+			String username = signupFrm.getUsernameText().getText().trim();
+			String password = new String(signupFrm.getPasswordText().getPassword());
+			String repassword = new String(signupFrm.getRepasswordText().getPassword());
+			String name = signupFrm.getNameText().getText().trim();
+			sendToServer("Signup " + username + " " + password + " " + repassword + " " + name);
+		});
+	}
+	
+	private void loginAccepted() {
+		loginFrm.dispose();
+		// TODO
+	}
+	
+	private void loginRejected() {
+		MessageBox.showAlert(loginFrm, "Login Rejected. Check your username or password", "Alert");
+	}
+	
+	private void signupSuccessed() {
+		signupFrm.dispose();
+		loginFrm.setVisible(true);
+	}
+	
+	private void setClosingAction(JFrame frame) {
+		frame.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent we) {
 				try {
-					toServer.writeUTF("create");
-					listenCreate();
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				} 
-			});
-			
-			loginSuccessedFrm.getBtnJoin().addActionListener(e -> {
-				try {
-					toServer.writeUTF("join");
-					listenJoin();
-					
-				} catch (IOException ex) {
-					ex.printStackTrace();
+					if (server != null) {
+						toServer.writeUTF("ClosingSocket");
+						listener.stop();
+						fromServer.close();
+						toServer.close();
+						server.close();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
-			});	
-		} catch (IOException ex) {
-			ex.printStackTrace();
+			}
+		});
+	}
+
+	private void sendToServer(String msg) {
+		try {
+			toServer.writeUTF(msg);
+			System.out.println("Send to server : " + msg);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
-	
-	private void listenCreate() {
-		try {
-			loginSuccessedFrm.getBtnCreate().setEnabled(false);
-			loginSuccessedFrm.getBtnJoin().setEnabled(false);
-			int port = Integer.parseInt(fromServer.readUTF());
-			ServerSocket ownServer = new ServerSocket(port);
-			loginSuccessedFrm.getStatus().setText("Status : Created. Waiting for connection...");
-			opp = ownServer.accept();
-			side = 1;
-			PlayingSession newPlayingSession = new PlayingSession(opp,side,name);
-			newPlayingSession.start();
-			loginSuccessedFrm.dispose();
-		} catch (IOException ex) {
-				ex.printStackTrace();
+
+	private class ServerListener implements Runnable {
+
+		private Thread worker;
+		private final AtomicBoolean running = new AtomicBoolean(false);
+
+		public void start() {
+			worker = new Thread(this);
+			worker.start();
 		}
-	}
-	
-	private void listenJoin() {
-		try {
-			loginSuccessedFrm.getBtnCreate().setEnabled(false);
-			loginSuccessedFrm.getBtnJoin().setEnabled(false);
-			int port = Integer.parseInt(fromServer.readUTF());
-			String hostAdd = fromServer.readUTF();
-			opp = new Socket(hostAdd,port);
-			side = -1;
-			PlayingSession newPlayingSession = new PlayingSession(opp,side,name);
-			newPlayingSession.start();
-			loginSuccessedFrm.dispose();
-		} catch (IOException ex) {
-			ex.printStackTrace();
+
+		public void stop() {
+			running.set(false);
+		}
+
+		public void run() {
+			running.set(true);
+			while (running.get()) {
+				try {
+					String msg = fromServer.readUTF();
+					String[] t = msg.split(" ");
+					//Login
+					if(t[0].equals("Login")) {
+						if(t[1].equals("Accepted"))
+							loginAccepted();
+						else
+							loginRejected();
+						
+					} 
+					//Signup
+					else if(t[0].equals("Signup")) {
+						if(t[1].equals("PasswordNotMatch")) {
+							MessageBox.showAlert(signupFrm, "Password NOT match","Alert");
+						} else if(t[1].equals("UsernameIsExisted")) {
+							MessageBox.showAlert(signupFrm, "Username is existed","Alert");
+						} else if(t[1].equals("Failed")) {
+							MessageBox.showAlert(signupFrm, "Can't Signup. Try again later","Alert");
+						} else {
+							MessageBox.showMessage(signupFrm, "Signup successed. Please login !");
+							signupSuccessed();
+						}
+						
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+					if(e.getMessage().equals("Connection reset")) {
+						stop();
+					}
+				} 
+			}
 		}
 	}
 }
