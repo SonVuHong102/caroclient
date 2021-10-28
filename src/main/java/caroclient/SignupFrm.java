@@ -11,7 +11,6 @@ public class SignupFrm extends JFrame{
 	private JTextField usernameText;
 	private JPasswordField passwordText;
 	private JPasswordField repasswordText;
-	private JTextField nameText;
 	private JButton signupButton;
 	
 	public SignupFrm() {
@@ -21,7 +20,7 @@ public class SignupFrm extends JFrame{
 	}
 	
 	private void initFrame() {
-		setSize(400,300);
+		setSize(400,200);
 		setTitle("Signup : Enter your information");
 		setResizable(false);
 		setLocationRelativeTo(null);
@@ -52,13 +51,6 @@ public class SignupFrm extends JFrame{
 		repasswordPanel.add(repasswordText);
 		container.add(repasswordPanel);
 		
-		JPanel namePanel = new JPanel();
-		JLabel nameLabel = new JLabel("Player name :  ");
-		nameText = new JTextField(20);
-		namePanel.add(nameLabel);
-		namePanel.add(nameText);
-		container.add(namePanel);
-		
 		JPanel button = new JPanel();
 		signupButton = new JButton("Sign up");
 		button.add(signupButton);
@@ -78,10 +70,6 @@ public class SignupFrm extends JFrame{
 
 	public JPasswordField getRepasswordText() {
 		return repasswordText;
-	}
-
-	public JTextField getNameText() {
-		return nameText;
 	}
 
 	public JButton getSignupButton() {

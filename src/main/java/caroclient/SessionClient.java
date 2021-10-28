@@ -10,14 +10,10 @@ import java.awt.event.WindowEvent;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JFrame;
-
-import utils.Value;
 
 /**
  *
@@ -27,11 +23,12 @@ public class SessionClient {
 	private Socket server;
 	private DataInputStream fromServer;
 	private DataOutputStream toServer;
-	
+
 	private ServerListener listener = null;
-	
+
 	private LoginFrm loginFrm;
 	private SignupFrm signupFrm;
+	private RoomFrm roomFrm;
 
 	public SessionClient(Socket server) {
 		this.server = server;
@@ -45,18 +42,19 @@ public class SessionClient {
 	}
 
 	public void start() {
-			// Create listener
-			listener = new ServerListener();
-			listener.start();
+		// Create listener
+		listener = new ServerListener();
+		listener.start();
 
-			// Initiate UI
-			createLoginFrm();
+		// Initiate UI
+		createLoginFrm();
 
 	}
 
+//UI Action
 	private void createLoginFrm() {
 		loginFrm = new LoginFrm();
-		setClosingAction(loginFrm);
+		setMainClosingAction(loginFrm);
 		loginFrm.getLoginButton().addActionListener(e -> {
 			String username = loginFrm.getUsernameText().getText().trim();
 			String password = new String(loginFrm.getPasswordText().getPassword()).trim();
@@ -68,32 +66,20 @@ public class SessionClient {
 	}
 
 	private void createSignupFrm() {
-		signupFrm = new SignupFrm();
 		loginFrm.setVisible(false);
+		signupFrm = new SignupFrm();
+		setSubClosingAction(signupFrm, loginFrm);
 		signupFrm.getSignupButton().addActionListener(e -> {
 			String username = signupFrm.getUsernameText().getText().trim();
 			String password = new String(signupFrm.getPasswordText().getPassword());
 			String repassword = new String(signupFrm.getRepasswordText().getPassword());
-			String name = signupFrm.getNameText().getText().trim();
-			sendToServer("Signup " + username + " " + password + " " + repassword + " " + name);
+			sendToServer("Signup " + username + " " + password + " " + repassword);
 		});
+
 	}
-	
-	private void loginAccepted() {
-		loginFrm.dispose();
-		// TODO
-	}
-	
-	private void loginRejected() {
-		MessageBox.showAlert(loginFrm, "Login Rejected. Check your username or password", "Alert");
-	}
-	
-	private void signupSuccessed() {
-		signupFrm.dispose();
-		loginFrm.setVisible(true);
-	}
-	
-	private void setClosingAction(JFrame frame) {
+
+	// Close Main Frame -> Close Socket
+	private void setMainClosingAction(JFrame frame) {
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
 				try {
@@ -111,6 +97,17 @@ public class SessionClient {
 		});
 	}
 
+	// Close Sub Frame -> Open Main Frame
+	private void setSubClosingAction(JFrame sub, JFrame main) {
+		sub.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent we) {
+				sub.dispose();
+				main.setVisible(true);
+			}
+		});
+	}
+
+// SEND TO SERVER
 	private void sendToServer(String msg) {
 		try {
 			toServer.writeUTF(msg);
@@ -118,6 +115,22 @@ public class SessionClient {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+//RECEIVER FROM SERVER
+	private void loginAccepted() {
+		loginFrm.dispose();
+		roomFrm = new RoomFrm();
+		setMainClosingAction(roomFrm);
+	}
+
+	private void loginRejected() {
+		MessageBox.showAlert(loginFrm, "Login Rejected. Check your username or password", "Alert");
+	}
+
+	private void signupSuccessed() {
+		signupFrm.dispose();
+		loginFrm.setVisible(true);
 	}
 
 	private class ServerListener implements Runnable {
@@ -140,34 +153,34 @@ public class SessionClient {
 				try {
 					String msg = fromServer.readUTF();
 					String[] t = msg.split(" ");
-					//Login
-					if(t[0].equals("Login")) {
-						if(t[1].equals("Accepted"))
+					// Login
+					if (t[0].equals("Login")) {
+						if (t[1].equals("Accepted"))
 							loginAccepted();
 						else
 							loginRejected();
-						
-					} 
-					//Signup
-					else if(t[0].equals("Signup")) {
-						if(t[1].equals("PasswordNotMatch")) {
-							MessageBox.showAlert(signupFrm, "Password NOT match","Alert");
-						} else if(t[1].equals("UsernameIsExisted")) {
-							MessageBox.showAlert(signupFrm, "Username is existed","Alert");
-						} else if(t[1].equals("Failed")) {
-							MessageBox.showAlert(signupFrm, "Can't Signup. Try again later","Alert");
+
+					}
+					// Signup
+					else if (t[0].equals("Signup")) {
+						if (t[1].equals("PasswordNotMatch")) {
+							MessageBox.showAlert(signupFrm, "Password NOT match", "Alert");
+						} else if (t[1].equals("UsernameIsExisted")) {
+							MessageBox.showAlert(signupFrm, "Username is existed", "Alert");
+						} else if (t[1].equals("Failed")) {
+							MessageBox.showAlert(signupFrm, "Can't Signup. Try again later", "Alert");
 						} else {
 							MessageBox.showMessage(signupFrm, "Signup successed. Please login !");
 							signupSuccessed();
 						}
-						
+
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
-					if(e.getMessage().equals("Connection reset")) {
+					if (e.getMessage().equals("Connection reset")) {
 						stop();
 					}
-				} 
+				}
 			}
 		}
 	}
