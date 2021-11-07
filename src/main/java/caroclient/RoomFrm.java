@@ -21,7 +21,7 @@ import javax.swing.table.DefaultTableModel;
  * @author Son Vu
  */
 public class RoomFrm extends JFrame {
-	private JTable tblPlayer;
+	private JTable tblClient;
 	private JButton btnInvite;
 
 	public RoomFrm() {
@@ -32,7 +32,6 @@ public class RoomFrm extends JFrame {
 
 	private void initFrm() {
 		setResizable(false);
-		setTitle("Channel");
 //		setLayout(new BorderLayout());
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -45,9 +44,9 @@ public class RoomFrm extends JFrame {
 		       return false;
 		    }
 		};
-		tblPlayer = new JTable(model);
-		model.addColumn("Avaiable players : ");
-		JScrollPane scrollPane = new JScrollPane(tblPlayer);
+		tblClient = new JTable(model);
+		model.addColumn("Online players : ");
+		JScrollPane scrollPane = new JScrollPane(tblClient);
 		scrollPane.setPreferredSize(new Dimension(200,200));
 		this.add(scrollPane,BorderLayout.CENTER);
 		
@@ -62,11 +61,16 @@ public class RoomFrm extends JFrame {
 	}
 
 
-	public JButton getBtnCreate() {
+	public JButton getBtnInvite() {
 		return btnInvite;
 	}
+	
+	public JTable getTblClient() {
+		return tblClient;
+	}
+
 
 	public DefaultTableModel getModel() {
-		return (DefaultTableModel) tblPlayer.getModel();
+		return (DefaultTableModel) tblClient.getModel();
 	}
 }

@@ -19,7 +19,7 @@ public class Client {
 		try {
 			Socket socket = new Socket(Value.serverAddress,Value.serverPort);
 			System.out.println("Connected to Server : " + socket.getInetAddress().getHostAddress() + " - " + socket.getPort());
-			SessionClient session = new SessionClient(socket);
+			LoginSession session = new LoginSession(socket);
 			session.start();
 		} catch (IOException ex) {
 			ex.printStackTrace();

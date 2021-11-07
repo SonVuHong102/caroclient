@@ -19,18 +19,18 @@ import javax.swing.JFrame;
  *
  * @author Son Vu
  */
-public class SessionClient {
+public class LoginSession {
 	private Socket server;
 	private DataInputStream fromServer;
 	private DataOutputStream toServer;
 
 	private ServerListener listener = null;
+	private String name;
 
 	private LoginFrm loginFrm;
 	private SignupFrm signupFrm;
-	private RoomFrm roomFrm;
 
-	public SessionClient(Socket server) {
+	public LoginSession(Socket server) {
 		this.server = server;
 		// Create Data Stream
 		try {
@@ -57,6 +57,7 @@ public class SessionClient {
 		setMainClosingAction(loginFrm);
 		loginFrm.getLoginButton().addActionListener(e -> {
 			String username = loginFrm.getUsernameText().getText().trim();
+			name = username;
 			String password = new String(loginFrm.getPasswordText().getPassword()).trim();
 			sendToServer("Login " + username + " " + password);
 		});
@@ -82,17 +83,8 @@ public class SessionClient {
 	private void setMainClosingAction(JFrame frame) {
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
-				try {
-					if (server != null) {
-						toServer.writeUTF("ClosingSocket");
-						listener.stop();
-						fromServer.close();
-						toServer.close();
-						server.close();
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				if (server != null)
+					socketStop();
 			}
 		});
 	}
@@ -117,11 +109,25 @@ public class SessionClient {
 		}
 	}
 
+// CLOSE SOCKET
+	private void socketStop() {
+		try {
+			toServer.writeUTF("ClosingSocket");
+			listener.stop();
+			fromServer.close();
+			toServer.close();
+			server.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 //RECEIVER FROM SERVER
 	private void loginAccepted() {
 		loginFrm.dispose();
-		roomFrm = new RoomFrm();
-		setMainClosingAction(roomFrm);
+		listener.stop();
+		//
+		new RoomSession(server,name).start();
 	}
 
 	private void loginRejected() {
@@ -144,7 +150,7 @@ public class SessionClient {
 		}
 
 		public void stop() {
-			running.set(false);
+			running.set(false);	
 		}
 
 		public void run() {
@@ -177,9 +183,7 @@ public class SessionClient {
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
-					if (e.getMessage().equals("Connection reset")) {
-						stop();
-					}
+					socketStop();
 				}
 			}
 		}
