@@ -59,6 +59,10 @@ public class LoginSession {
 			String username = loginFrm.getUsernameText().getText().trim();
 			name = username;
 			String password = new String(loginFrm.getPasswordText().getPassword()).trim();
+			if(username.isEmpty() || password.isEmpty()) {
+				MessageBox.showAlert(loginFrm, "Please enter all fields", "Empty field");
+				return;
+			}
 			sendToServer("Login " + username + " " + password);
 		});
 		loginFrm.getSignupButton().addActionListener(e -> {
@@ -72,8 +76,12 @@ public class LoginSession {
 		setSubClosingAction(signupFrm, loginFrm);
 		signupFrm.getSignupButton().addActionListener(e -> {
 			String username = signupFrm.getUsernameText().getText().trim();
-			String password = new String(signupFrm.getPasswordText().getPassword());
-			String repassword = new String(signupFrm.getRepasswordText().getPassword());
+			String password = new String(signupFrm.getPasswordText().getPassword()).trim();
+			String repassword = new String(signupFrm.getRepasswordText().getPassword()).trim();
+			if(username.isEmpty() || password.isEmpty() || repassword.isEmpty()) {
+				MessageBox.showAlert(loginFrm, "Please enter all fields", "Empty field");
+				return;
+			}
 			sendToServer("Signup " + username + " " + password + " " + repassword);
 		});
 
@@ -117,6 +125,7 @@ public class LoginSession {
 			fromServer.close();
 			toServer.close();
 			server.close();
+			System.out.println("SocketStop");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -128,10 +137,6 @@ public class LoginSession {
 		listener.stop();
 		//
 		new RoomSession(server,name).start();
-	}
-
-	private void loginRejected() {
-		MessageBox.showAlert(loginFrm, "Login Rejected. Check your username or password", "Alert");
 	}
 
 	private void signupSuccessed() {
@@ -161,10 +166,13 @@ public class LoginSession {
 					String[] t = msg.split(" ");
 					// Login
 					if (t[0].equals("Login")) {
-						if (t[1].equals("Accepted"))
+						if (t[1].equals("Accepted")) {
 							loginAccepted();
-						else
-							loginRejected();
+						} else if(t[1].equals("Rejected")) {
+							MessageBox.showAlert(loginFrm, "Login Rejected. Check your username or password!", "Alert");
+						} else {
+							MessageBox.showAlert(loginFrm, "Login Rejected. Account is in using!", "Alert");
+						}
 
 					}
 					// Signup

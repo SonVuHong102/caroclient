@@ -11,6 +11,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import utils.Value;
 
 /**
@@ -18,38 +20,39 @@ import utils.Value;
  * @author Son Vu
  */
 public class PlayingSession {
-	private final Socket opp;
-	private final String name;
-	private DataInputStream fromOpp;
-	private DataOutputStream toOpp;
+	private Socket server;
+	private DataInputStream fromServer;
+	private DataOutputStream toServer;
+	
+	private String name;
+	private String opp;
+	
+	private ServerListener listener;
 
-	private PlayingFrm board;
+	private PlayingFrm playingFrm;
 	private int boardStatus[][];
-	private final int side;
+	private int side;
 
-	public PlayingSession(Socket socket, int side, String name) {
-		this.opp = socket;
-		this.side = side;
+	public PlayingSession(String name,String opp,Socket server,int side) {
+		this.server = server;
+		this.opp = opp;
 		this.name = name;
+		this.side = side;
 	}
 
 	public void start() {
+		listener = new ServerListener();
+		listener.start();
 		initBoard();
 		initCompoments();
-
 	}
 
 	private void initBoard() {
-		try {
+//		try {
 			boardStatus = new int[Value.blockSize][Value.blockSize];
-			board = new PlayingFrm(name, boardStatus);
-			fromOpp = new DataInputStream(opp.getInputStream());
-			toOpp = new DataOutputStream(opp.getOutputStream());
-			Thread listener = new Thread(new OppListener());
-			listener.start();
-			String color = (side == 1) ? "RED" : "BLUE";
-			board.setTitle(name + "  -  " + color);
-			board.getContainer().addMouseListener(new MouseAdapter() {
+			playingFrm = new PlayingFrm(name, boardStatus);
+			
+			playingFrm.getContainer().addMouseListener(new MouseAdapter() {
 				@Override
 				public void mousePressed(MouseEvent e) {
 					if (e.getX() <= Value.boardMargin || e.getY() <= Value.boardMargin)
@@ -61,8 +64,8 @@ public class PlayingSession {
 					tryMove(row, column);
 				}
 			});
-		} catch (IOException ex) {
-		}
+//		} catch (IOException ex) {
+//		}
 	}
 
 	private void initCompoments() {
@@ -70,31 +73,61 @@ public class PlayingSession {
 	}
 
 	private void tryMove(int row, int column) {
+//		try {
+//			
+//		} catch (IOException ex) {
+//		}
+	}
+	
+// CLOSE SOCKET
+	private void socketStop() {
 		try {
-			if (boardStatus[row][column] == 0) {
-				boardStatus[row][column] = side;
-				toOpp.writeUTF("move " + row + " " + column);
-				board.getContainer().repaint();
-			}
-		} catch (IOException ex) {
+			toServer.writeUTF("ClosingSocket " + opp);
+			listener.stop();
+			fromServer.close();
+			toServer.close();
+			server.close();
+			System.out.println("SocketStop");
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
+	
+	private class ServerListener implements Runnable {
 
-	public class OppListener implements Runnable {
+		private Thread worker;
+		private final AtomicBoolean running = new AtomicBoolean(false);
+
+		public void start() {
+			worker = new Thread(this);
+			worker.start();
+		}
+
+		public void stop() {
+			running.set(false);
+
+		}
+
 		public void run() {
-			while (true) {
+			running.set(true);
+			while (running.get()) {
 				try {
-					String msg = fromOpp.readUTF();
-					String[] command = msg.split(" ");
-					if (command[0].equalsIgnoreCase("move")) {
-						int row = Integer.parseInt(command[1]);
-						int column = Integer.parseInt(command[2]);
-						boardStatus[row][column] = -side;
-						board.getContainer().repaint();
+					String msg = fromServer.readUTF();
+					System.out.println("Receive from server : " + msg);
+					String[] t = msg.split(" ");
+					if(t[0].equals("ExitedGame")) {
+						if(MessageBox.showYesNo(playingFrm, t[1] + " has exited the game. Do you want to back to room ?", "Game Cancelled")) {
+							// YES
+							
+						}
 					}
-				} catch (IOException ex) {
+
+				} catch (IOException e) {
+					e.printStackTrace();
+					socketStop();
 				}
 			}
 		}
 	}
+
 }

@@ -1,13 +1,14 @@
 package caroclient;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Vector;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.swing.JFrame;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
@@ -16,14 +17,16 @@ public class RoomSession {
 	private DataInputStream fromServer;
 	private DataOutputStream toServer;
 
-	
 	private String name;
+	private String opp;
 	private ServerListener listener = null;
 
 	private RoomFrm roomFrm;
 	private DefaultTableModel model;
+	
+	private int side;
 
-	public RoomSession(Socket server,String name) {
+	public RoomSession(Socket server, String name) {
 		this.server = server;
 		this.name = name;
 		try {
@@ -46,16 +49,32 @@ public class RoomSession {
 	private void createRoomFrm() {
 		roomFrm = new RoomFrm();
 		roomFrm.setTitle("Your name : " + name);
-		sendToServer("Refresh");
+		setMainClosingAction(roomFrm);
+		sendToServer("RefreshPlayer");
 		JTable roomTable = roomFrm.getTblClient();
 		roomFrm.getBtnInvite().addActionListener(e -> {
-			String opp = (String) roomTable.getValueAt(roomTable.getSelectedRow(), roomTable.getSelectedColumn());
-			if(opp == null) 
+			String player = (String) roomTable.getValueAt(roomTable.getSelectedRow(), roomTable.getSelectedColumn());
+			if (player == null)
 				return;
-			sendToServer("Invite " + opp);
-			MessageBox.showMessage(roomFrm, "Invited " + opp + " .Please wait for response or invite another...");
+			sendToServer("Invite " + player);
 		});
 
+	}
+	
+	private void createPlayRoom() {
+		roomFrm.dispose();
+		listener.stop();
+		new PlayingSession(name,opp,server,side).start();
+	}
+	
+	// Close Main Frame -> Close Socket
+	private void setMainClosingAction(JFrame frame) {
+		frame.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent we) {
+				if (server != null)
+					socketStop();
+			}
+		});
 	}
 
 // SEND TO SERVER
@@ -67,7 +86,7 @@ public class RoomSession {
 			e.printStackTrace();
 		}
 	}
-	
+
 // SOCKET CLOSE
 	private void socketStop() {
 		try {
@@ -80,7 +99,7 @@ public class RoomSession {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private class ServerListener implements Runnable {
 
 		private Thread worker;
@@ -93,7 +112,7 @@ public class RoomSession {
 
 		public void stop() {
 			running.set(false);
-			
+
 		}
 
 		public void run() {
@@ -104,13 +123,34 @@ public class RoomSession {
 					System.out.println("Receive from server : " + msg);
 					String[] t = msg.split(" ");
 					// Refresh
-					if(t[0].equals("Refresh")) {
+					if (t[0].equals("RefreshPlayer")) {
 						model = roomFrm.getModel();
 						model.setRowCount(0);
-						for(int i=1;i<t.length;i++) {
-							if(!t[i].equals(name))
-								model.addRow(new Object[] {t[i]});
+						for (int i = 1; i < t.length; i++) {
+							if (!t[i].equals(name))
+								model.addRow(new Object[] { t[i] });
 						}
+					} else if (t[0].equals("InvitedPlayer")) {
+						MessageBox.showMessage(roomFrm,
+								"Invited " + t[1] + " .Please wait for response or invite another...");
+					} else if (t[0].equals("Invitation")) {
+						// YES
+						if (MessageBox.showYesNo(roomFrm, t[1] + " want to play. Accept ?", "Invitation")) {
+							sendToServer("AcceptedInvitation " + t[1]);
+							opp = t[1];
+							side = 2;
+							createPlayRoom();
+						} else { // NO
+							sendToServer("RejectedInvitation " + t[1]);
+						}
+
+					} else if (t[0].equals("RejectedInvitation")) {
+						MessageBox.showMessage(roomFrm, t[1] + " rejected your invitation.");
+					} else if (t[0].equals("AcceptedInvitation")) {
+						MessageBox.showMessage(roomFrm, t[1] + " accepted your invitation.");
+						opp = t[1];
+						side = 1;
+						createPlayRoom();
 					}
 
 				} catch (IOException e) {
