@@ -23,8 +23,8 @@ public class Board extends JPanel {
 	private final int boardSize = Value.boardSize;
 	private int boardStatus[][];
 	
-	public Board(int[][] boardStatus) {
-		this.boardStatus = boardStatus;
+	public Board() {
+		boardStatus = new int[boardSize][boardSize];
 		initBoard();
 	}
 	
@@ -56,7 +56,8 @@ public class Board extends JPanel {
 		g.fillRect(x+1,y+1,blockSize-1,blockSize-1);
 	}
 	
-	public void boardRepaint() {
+	public void boardRepaint(int[][] boardStatus) {
+		this.boardStatus = boardStatus;
 		this.repaint();
 	}
 	

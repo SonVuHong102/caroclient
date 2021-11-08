@@ -18,7 +18,7 @@ public class PlayingFrm extends JFrame {
 	
 	public PlayingFrm(String name, int boardStatus[][]) {
 		initMainFrm(name);
-		initBoard(boardStatus);
+		initBoard();
 		
 		add(container);
 		setVisible(true);
@@ -30,8 +30,12 @@ public class PlayingFrm extends JFrame {
 		setResizable(false);
 	}
 	
-	private void initBoard(int boardStatus[][]) {
-		container = new Board(boardStatus);
+	private void initBoard() {
+		container = new Board();
+	}
+	
+	public void boardRepaint(int[][] boardStatus) {
+		container.boardRepaint(boardStatus);
 	}
 	
 	public Board getContainer() {

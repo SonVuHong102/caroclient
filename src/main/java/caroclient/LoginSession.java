@@ -91,8 +91,10 @@ public class LoginSession {
 	private void setMainClosingAction(JFrame frame) {
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
-				if (server != null)
+				if (server != null) {
+					frame.dispose();
 					socketStop();
+				}
 			}
 		});
 	}
