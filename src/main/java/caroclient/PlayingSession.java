@@ -161,7 +161,6 @@ public class PlayingSession {
 						boardStatus[row][column] = -side;
 						isMoved = false;
 						playingFrm.boardRepaint(boardStatus);
-						System.out.println("REPAINT");
 						playingFrm.setTitle(name + " (" + color + ") : Your turn");
 					}
 
