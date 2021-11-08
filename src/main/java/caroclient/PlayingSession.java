@@ -36,6 +36,7 @@ public class PlayingSession {
 	private PlayingFrm playingFrm;
 	private int boardStatus[][];
 	private int side;
+	private String color;
 	private boolean isMoved = true;
 
 	public PlayingSession(String name, String opp, Socket server, int side) {
@@ -61,8 +62,13 @@ public class PlayingSession {
 		boardStatus = new int[Value.blockSize][Value.blockSize];
 		playingFrm = new PlayingFrm(name, boardStatus);
 		setMainClosingAction(playingFrm);
-		if(side == 1)
+		color = (side == 1) ? "RED" : "BLUE";
+		if(side == 1) {
 			isMoved = false;
+			playingFrm.setTitle(name + " ("+color+") : Your turn");
+		} else {
+			playingFrm.setTitle(name + " ("+color+") : Opp turn");
+		}
 		playingFrm.getContainer().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
@@ -80,10 +86,11 @@ public class PlayingSession {
 	}
 
 	private void tryMove(int row, int column) {
-		sendToServer("Move " + opp + " " + row + " " + column);
 		boardStatus[row][column] = side;
-		isMoved = false;
+		isMoved = true;
 		playingFrm.boardRepaint(boardStatus);
+		playingFrm.setTitle(name + " ("+color+") : Opp turn");
+		sendToServer("Move " + opp + " " + row + " " + column);
 	}
 
 	private void sendToServer(String msg) {
@@ -154,6 +161,8 @@ public class PlayingSession {
 						boardStatus[row][column] = -side;
 						isMoved = false;
 						playingFrm.boardRepaint(boardStatus);
+						System.out.println("REPAINT");
+						playingFrm.setTitle(name + " (" + color + ") : Your turn");
 					}
 
 				} catch (IOException e) {

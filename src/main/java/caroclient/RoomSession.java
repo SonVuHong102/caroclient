@@ -140,7 +140,7 @@ public class RoomSession {
 						if (MessageBox.showYesNo(roomFrm, t[1] + " want to play. Accept ?", "Invitation")) {
 							sendToServer("AcceptedInvitation " + t[1]);
 							opp = t[1];
-							side = 2;
+							side = -1;
 							createPlayRoom();
 						} else { // NO
 							sendToServer("RejectedInvitation " + t[1]);
