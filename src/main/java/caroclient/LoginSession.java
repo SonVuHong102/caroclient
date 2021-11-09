@@ -92,7 +92,7 @@ public class LoginSession {
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
 				if (server != null) {
-					frame.dispose();
+//					frame.dispose();
 					socketStop();
 				}
 			}

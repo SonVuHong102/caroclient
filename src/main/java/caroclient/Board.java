@@ -30,6 +30,7 @@ public class Board extends JPanel {
 	
 	private void initBoard() {
 		this.setSize(new Dimension(boardSize,boardSize));
+		this.setPreferredSize(new Dimension(boardSize,boardSize));
 		this.setBackground(Color.WHITE);
 	}
 	

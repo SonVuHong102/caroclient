@@ -5,6 +5,8 @@
  */
 package caroclient;
 
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -15,7 +17,11 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 
 import utils.Value;
 
@@ -38,6 +44,13 @@ public class PlayingSession {
 	private int side;
 	private String color;
 	private boolean isMoved = true;
+	
+	private JLabel myTimerArea;
+	private JLabel oppTimerArea;
+	private JTextArea chatBox;
+	private JTextField msgBox;
+	private JButton btnSend;
+	private JButton btnSurr;
 
 	public PlayingSession(String name, String opp, Socket server, int side) {
 		this.server = server;
@@ -56,11 +69,14 @@ public class PlayingSession {
 		listener = new ServerListener();
 		listener.start();
 		initBoard();
+//		initTimerArea();
+		initChatArea();
+		initFunctionArea();
 	}
 
 	private void initBoard() {
 		boardStatus = new int[Value.blockSize][Value.blockSize];
-		playingFrm = new PlayingFrm(name, boardStatus);
+		playingFrm = new PlayingFrm();
 		setMainClosingAction(playingFrm);
 		color = (side == 1) ? "RED" : "BLUE";
 		if(side == 1) {
@@ -69,7 +85,7 @@ public class PlayingSession {
 		} else {
 			playingFrm.setTitle(name + " ("+color+") : Opp turn");
 		}
-		playingFrm.getContainer().addMouseListener(new MouseAdapter() {
+		playingFrm.getBoard().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if (e.getX() <= Value.boardMargin || e.getY() <= Value.boardMargin)
@@ -84,12 +100,62 @@ public class PlayingSession {
 			}
 		});
 	}
+	
+	private void initTimerArea() {
+		myTimerArea = playingFrm.getMyTimerLabel();
+		oppTimerArea = playingFrm.getOppTimerLabel();
+		// TODO
+	}
+	
+	private void initChatArea() {
+		chatBox = playingFrm.getChatBox();
+		msgBox = playingFrm.getMsgBox();
+		btnSend = playingFrm.getBtnSend();
+		playingFrm.setFocusable(true);
+		playingFrm.getRootPane().setDefaultButton(btnSend);
+		chatBox.setText("----ChatBox----");
+		btnSend.addActionListener(e -> {
+			String msg = msgBox.getText().trim();
+			if(!msg.isEmpty()) {
+				chatBox.setText(chatBox.getText() + "\n" + name + " : " + msg);
+				msgBox.setText("");
+				sendToServer("Chat " + opp);
+				sendToServer(msg);
+				
+			}
+		});
+		btnSend.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				// TODO Auto-generated method stub
+				if(e.getKeyCode()==KeyEvent.VK_ENTER) {
+					btnSend.doClick();
+				}
+			}
+		});
+	}
+	
+	private void initFunctionArea() {
+		btnSurr = playingFrm.getBtnSurrender();
+		btnSurr.addActionListener(e -> {
+			if(MessageBox.showYesNo(playingFrm, "Surrender ?", "Alert")) {
+				sendToServer("Surrender " + opp);
+				if(MessageBox.showYesNo(playingFrm, "Return to room channel ?", "Alert")) {
+					listener.stop();
+					playingFrm.dispose();
+					new RoomSession(server,name).start();
+				} else {
+					socketStop();
+				}
+			}
+		});
+	}
 
 	private void tryMove(int row, int column) {
 		boardStatus[row][column] = side;
 		isMoved = true;
 		playingFrm.boardRepaint(boardStatus);
-		playingFrm.setTitle(name + " ("+color+") : Opp turn");
+		playingFrm.setTitle(name + " ("+color+") : Opp turn"); 
 		sendToServer("Move " + opp + " " + row + " " + column);
 	}
 
@@ -101,12 +167,13 @@ public class PlayingSession {
 			e.printStackTrace();
 		}
 	}
+	
 	// Close Main Frame -> Close Socket
 	private void setMainClosingAction(JFrame frame) {
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
 				if (server != null) {
-					frame.dispose();
+//					frame.dispose();
 					socketStop();
 				}
 			}
@@ -162,6 +229,17 @@ public class PlayingSession {
 						isMoved = false;
 						playingFrm.boardRepaint(boardStatus);
 						playingFrm.setTitle(name + " (" + color + ") : Your turn");
+					} else if(t[0].equals("Chat")) {
+						msg = fromServer.readUTF();
+						chatBox.setText(chatBox.getText() + "\n" + opp + " : " + msg);
+					} else if (t[0].equals("OppSurrender")) {
+						if(MessageBox.showYesNo(playingFrm, opp + " has surrendered ! Return to room channel ?","You win !")) {
+							listener.stop();
+							playingFrm.dispose();
+							new RoomSession(server,name).start();
+						} else {
+							socketStop();
+						}
 					}
 
 				} catch (IOException e) {

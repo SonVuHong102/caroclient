@@ -21,12 +21,12 @@ public class LoginFrm extends JFrame {
 		initFrame();
 		initComponents();
 		setVisible(true);
-	}
+	} 
 	
 	private void initFrame() {
 		setSize(400,200);
 		setTitle("Login");
-		setResizable(false);
+		setResizable(false); 
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		

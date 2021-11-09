@@ -72,7 +72,7 @@ public class RoomSession {
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
 				if (server != null) {
-					frame.dispose();
+//					frame.dispose();
 					socketStop();
 				}
 			}
@@ -133,26 +133,29 @@ public class RoomSession {
 								model.addRow(new Object[] { t[i] });
 						}
 					} else if (t[0].equals("InvitedPlayer")) {
-						MessageBox.showMessage(roomFrm,
-								"Invited " + t[1] + " .Please wait for response or invite another...");
+//						MessageBox.showMessage(roomFrm,
+//								"Invited " + t[1] + " .Please wait for response or invite another...");
+					} else if(t[0].equals("InvitedPlayerFailed")) {
+//						MessageBox.showMessage(roomFrm,"Invited " + t[1] + " failed");
 					} else if (t[0].equals("Invitation")) {
 						// YES
 						if (MessageBox.showYesNo(roomFrm, t[1] + " want to play. Accept ?", "Invitation")) {
 							sendToServer("AcceptedInvitation " + t[1]);
-							opp = t[1];
-							side = -1;
-							createPlayRoom();
 						} else { // NO
 							sendToServer("RejectedInvitation " + t[1]);
 						}
-
+						
 					} else if (t[0].equals("RejectedInvitation")) {
-						MessageBox.showMessage(roomFrm, t[1] + " rejected your invitation.");
+//						MessageBox.showMessage(roomFrm, t[1] + " rejected your invitation.");
 					} else if (t[0].equals("AcceptedInvitation")) {
-						MessageBox.showMessage(roomFrm, t[1] + " accepted your invitation.");
+//						MessageBox.showMessage(roomFrm, t[1] + " accepted your invitation.");
+						sendToServer("ReadyToPlay " + t[1]);
+					} else if(t[0].equals("CreateGame")) {
 						opp = t[1];
-						side = 1;
+						side = Integer.parseInt(t[2]);
 						createPlayRoom();
+					} else if(t[0].equals("PlayerNotAvaiable")) {
+						MessageBox.showMessage(roomFrm, t[1] + " no longer avaiable.");
 					}
 
 				} catch (IOException e) {
