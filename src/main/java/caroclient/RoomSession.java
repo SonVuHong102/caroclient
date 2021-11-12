@@ -25,6 +25,7 @@ public class RoomSession {
 	private DefaultTableModel model;
 	
 	private int side;
+	private int boardID;
 
 	public RoomSession(Socket server, String name) {
 		this.server = server;
@@ -38,10 +39,10 @@ public class RoomSession {
 	}
 
 	public void start() {
+		sendToServer("InitRoomSession " + name);
+		createRoomFrm();
 		listener = new ServerListener();
 		listener.start();
-
-		createRoomFrm();
 	}
 
 //UI Action
@@ -64,7 +65,7 @@ public class RoomSession {
 	private void createPlayRoom() {
 		roomFrm.dispose();
 		listener.stop();
-		new PlayingSession(name,opp,server,side).start();
+		new PlayingSession(name,opp,server,side,boardID).start();
 	}
 	
 	// Close Main Frame -> Close Socket
@@ -150,9 +151,12 @@ public class RoomSession {
 					} else if (t[0].equals("AcceptedInvitation")) {
 //						MessageBox.showMessage(roomFrm, t[1] + " accepted your invitation.");
 						sendToServer("ReadyToPlay " + t[1]);
+					} else if (t[0].equals("InPlaying")) {
+						MessageBox.showAlert(roomFrm,t[1] + " is playing !","Alert");
 					} else if(t[0].equals("CreateGame")) {
 						opp = t[1];
 						side = Integer.parseInt(t[2]);
+						boardID = Integer.parseInt(t[3]);
 						createPlayRoom();
 					} else if(t[0].equals("PlayerNotAvaiable")) {
 						MessageBox.showMessage(roomFrm, t[1] + " no longer avaiable.");

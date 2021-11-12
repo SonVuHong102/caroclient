@@ -14,6 +14,7 @@ import java.awt.event.WindowEvent;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -33,6 +34,7 @@ public class PlayingSession {
 	private Socket server;
 	private DataInputStream fromServer;
 	private DataOutputStream toServer;
+	private ObjectOutputStream objToServer;
 
 	private String name;
 	private String opp;
@@ -41,6 +43,7 @@ public class PlayingSession {
 
 	private PlayingFrm playingFrm;
 	private int boardStatus[][];
+	private int boardID;
 	private int side;
 	private String color;
 	private boolean isMoved = true;
@@ -52,11 +55,12 @@ public class PlayingSession {
 	private JButton btnSend;
 	private JButton btnSurr;
 
-	public PlayingSession(String name, String opp, Socket server, int side) {
+	public PlayingSession(String name, String opp, Socket server, int side, int boardID) {
 		this.server = server;
 		this.opp = opp;
 		this.name = name;
 		this.side = side;
+		this.boardID = boardID;
 		try {
 			fromServer = new DataInputStream(server.getInputStream());
 			toServer = new DataOutputStream(server.getOutputStream());
@@ -141,12 +145,12 @@ public class PlayingSession {
 			if(MessageBox.showYesNo(playingFrm, "Surrender ?", "Alert")) {
 				sendToServer("Surrender " + opp);
 				if(MessageBox.showYesNo(playingFrm, "Return to room channel ?", "Alert")) {
-					listener.stop();
-					playingFrm.dispose();
 					new RoomSession(server,name).start();
+					listener.stop();
 				} else {
 					socketStop();
 				}
+				playingFrm.dispose();
 			}
 		});
 	}
@@ -216,7 +220,9 @@ public class PlayingSession {
 					String msg = fromServer.readUTF();
 					System.out.println("Receive from server : " + msg);
 					String[] t = msg.split(" ");
-					if (t[0].equals("ExitedGame")) {
+					if(t[0].equals("Invitation")) {
+						sendToServer("InPlaying " + t[1]);
+					} else if (t[0].equals("ExitedGame")) {
 						if (MessageBox.showYesNo(playingFrm,t[1] + " has exited the game. Do you want to back to room ?", "Game Cancelled")) {
 							new RoomSession(server,name).start();
 						}
@@ -234,12 +240,12 @@ public class PlayingSession {
 						chatBox.setText(chatBox.getText() + "\n" + opp + " : " + msg);
 					} else if (t[0].equals("OppSurrender")) {
 						if(MessageBox.showYesNo(playingFrm, opp + " has surrendered ! Return to room channel ?","You win !")) {
-							listener.stop();
-							playingFrm.dispose();
 							new RoomSession(server,name).start();
+							listener.stop();
 						} else {
 							socketStop();
 						}
+						playingFrm.dispose();
 					}
 
 				} catch (IOException e) {
