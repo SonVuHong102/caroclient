@@ -65,7 +65,7 @@ public class RoomSession {
 	private void createPlayRoom() {
 		roomFrm.dispose();
 		listener.stop();
-		new PlayingSession(name,opp,server,side,boardID).start();
+		new PlayingSession(name,opp,server,side).start();
 	}
 	
 	// Close Main Frame -> Close Socket

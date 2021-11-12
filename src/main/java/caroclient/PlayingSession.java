@@ -43,7 +43,6 @@ public class PlayingSession {
 
 	private PlayingFrm playingFrm;
 	private int boardStatus[][];
-	private int boardID;
 	private int side;
 	private String color;
 	private boolean isMoved = true;
@@ -55,12 +54,11 @@ public class PlayingSession {
 	private JButton btnSend;
 	private JButton btnSurr;
 
-	public PlayingSession(String name, String opp, Socket server, int side, int boardID) {
+	public PlayingSession(String name, String opp, Socket server, int side) {
 		this.server = server;
 		this.opp = opp;
 		this.name = name;
 		this.side = side;
-		this.boardID = boardID;
 		try {
 			fromServer = new DataInputStream(server.getInputStream());
 			toServer = new DataOutputStream(server.getOutputStream());
