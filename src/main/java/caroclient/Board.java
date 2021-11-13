@@ -24,7 +24,7 @@ public class Board extends JPanel {
 	private int boardStatus[][];
 	
 	public Board() {
-		boardStatus = new int[boardSize][boardSize];
+		boardStatus = new int[blockNum][blockNum];
 		initBoard();
 	}
 	
