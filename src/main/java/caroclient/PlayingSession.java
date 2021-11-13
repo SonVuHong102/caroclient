@@ -34,7 +34,6 @@ public class PlayingSession {
 	private Socket server;
 	private DataInputStream fromServer;
 	private DataOutputStream toServer;
-	private ObjectOutputStream objToServer;
 
 	private String name;
 	private String opp;
@@ -181,6 +180,16 @@ public class PlayingSession {
 			}
 		});
 	}
+	
+	private void sendBackToRoom(String msg,String title) {
+		if(MessageBox.showYesNo(playingFrm, msg + " Return to room channel ?",title)) {
+			new RoomSession(server,name).start();
+			listener.stop();
+		} else {
+			socketStop();
+		}
+		playingFrm.dispose();
+	}
 
 // CLOSE SOCKET
 	private void socketStop() {
@@ -237,13 +246,11 @@ public class PlayingSession {
 						msg = fromServer.readUTF();
 						chatBox.setText(chatBox.getText() + "\n" + opp + " : " + msg);
 					} else if (t[0].equals("OppSurrender")) {
-						if(MessageBox.showYesNo(playingFrm, opp + " has surrendered ! Return to room channel ?","You win !")) {
-							new RoomSession(server,name).start();
-							listener.stop();
-						} else {
-							socketStop();
-						}
-						playingFrm.dispose();
+						sendBackToRoom("Opp has surrender !", "Game Over");
+					} else if(t[0].equals("OppWon")) {
+						sendBackToRoom("Opp has won !", "Game Over");
+					} else if (t[0].equals("YouWon")) {
+						sendBackToRoom("You has won !", "Game Over");
 					}
 
 				} catch (IOException e) {
